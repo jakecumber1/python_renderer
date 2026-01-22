@@ -12,6 +12,7 @@ class vec3:
         self.y = y
         self.z = z
 """
+A cube class for quickly creating an rendering cubes given a starting coordinate and length, work in progress.
 class cube:
     def __init__(self, start_vertex : vec3, side_length):
         self.vertices = [start_vertex, vec3(start_vertex.x + side_length, start_vertex.y, start_vertex.z),
@@ -77,8 +78,8 @@ while running:
     #print("filling color")
     #fill the screen with a background color, we'll choose red
     screen.fill((255, 0, 0))
-    #Now add a green rectange
-    #print("drawing rectangle")
+    #Now add a green cube
+    #print("drawing cube")
     COLOR = (0, 255, 0)
     vs = [
         vec3(0.5, 0.5, 0.5),
@@ -95,6 +96,7 @@ while running:
     (0, 4), (1, 5), (2, 6), (3, 7)]
     
     for edge in edges:
+        #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
         a = convert_coordinates(project(transform(rotate_xz(vs[edge[0]], angle), dz)))
         b = convert_coordinates(project(transform(rotate_xz(vs[edge[1]], angle), dz)))
         pg.draw.line(screen, COLOR, a, b)
