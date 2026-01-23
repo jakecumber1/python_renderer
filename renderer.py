@@ -3,14 +3,7 @@ and plane of projection calculations."""
 #pygame for window creation
 import pygame as pg
 import math
-
-"""Object Definition"""
-#Define a vec3 class which will hold our vertex position in a 3d space
-class vec3:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+import vecs as vc
 """
 A cube class for quickly creating an rendering cubes given a starting coordinate and length, work in progress.
 class cube:
@@ -46,21 +39,21 @@ pygame has 0,0 as the top left of the screen, w, 0 as the top right, 0, h as the
 and finally w, h as the bottom right
 we need to map our virtual space from -1,...,1 to 0,...,w/h to render to the pygame display
 """
-def convert_coordinates(coor : vec3):
+def convert_coordinates(coor : vc.vec3):
     #adding 1 brings it to (0,...,2), dividing by 2 brings it to (0,...,1) multiplying it by width/height gives us (0,...,width/height)
     return ((coor.x + 1) / 2 * WIDTH, (1 - (coor.y + 1) / 2) * HEIGHT)
-def project(vertex: vec3):
-    return vec3(vertex.x/vertex.z, vertex.y/vertex.z, vertex.z)
+def project(vertex: vc.vec3):
+    return vc.vec3(vertex.x/vertex.z, vertex.y/vertex.z, vertex.z)
 #function which rotates around the y axis (modifying the existing x, z coordinates)
 #derivation for the rotation matrix: https://en.wikipedia.org/wiki/Rotation_matrix
-def rotate_xz(vertex : vec3, angle):
+def rotate_xz(vertex : vc.vec3, angle):
     cos_angle = math.cos(angle)
     sin_angle = math.sin(angle)
     x_rotated = vertex.x * cos_angle - vertex.z * sin_angle
     z_rotated = vertex.x * sin_angle + vertex.z * cos_angle
-    return vec3(x_rotated, vertex.y, z_rotated)
+    return vc.vec3(x_rotated, vertex.y, z_rotated)
 
-def transform(vertex : vec3, dz):
+def transform(vertex : vc.vec3, dz):
     vertex.z += (2.0 + dz)
     return vertex
 
@@ -82,14 +75,14 @@ while running:
     #print("drawing cube")
     COLOR = (0, 255, 0)
     vs = [
-        vec3(0.5, 0.5, 0.5),
-        vec3(-0.5, 0.5, 0.5),
-        vec3(-0.5, -0.5, 0.5),
-        vec3(0.5, -0.5, 0.5),
-        vec3(0.5, 0.5, -0.5),
-        vec3(-0.5, 0.5, -0.5),
-        vec3(-0.5, -0.5, -0.5),
-        vec3(0.5, -0.5, -0.5)
+        vc.vec3(0.5, 0.5, 0.5),
+        vc.vec3(-0.5, 0.5, 0.5),
+        vc.vec3(-0.5, -0.5, 0.5),
+        vc.vec3(0.5, -0.5, 0.5),
+        vc.vec3(0.5, 0.5, -0.5),
+        vc.vec3(-0.5, 0.5, -0.5),
+        vc.vec3(-0.5, -0.5, -0.5),
+        vc.vec3(0.5, -0.5, -0.5)
     ]
     edges = [(0, 1), (1, 2), (2, 3), (3, 0),
     (4, 5), (5, 6), (6, 7), (7, 4),
