@@ -38,9 +38,10 @@ class cube:
     def scale(self, ratio : float):
         if (ratio <= 0):
             print("cannot scale by a 0 or negative amount!")
+            return
         i = 0
         while i < len(self.vertices):
-            self.vertices[i] = self.vertices[i] * 0.5
+            self.vertices[i] = self.vertices[i] * ratio
             i = i + 1
 
     def print(self):
@@ -50,8 +51,8 @@ class cube:
             i = i + 1
         print(self.edges)
 
-
-cube1 = cube(vc.vec3(0, 0, 1), 1)
-cube1.print()
-cube1.scale(0.5)
-cube1.print()
+if __name__ == "__main__":
+    cube1 = cube(vc.vec3(0, 0, 1), 1)
+    cube1.print()
+    cube1.scale(0.5)
+    cube1.print()

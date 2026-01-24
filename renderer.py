@@ -5,6 +5,7 @@ import pygame as pg
 import math
 import vecs as vc
 import objects as ob
+from camera import Camera
 
 """Window creation"""
 #Basic constants for our scene
@@ -15,21 +16,6 @@ pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 clock = pg.time.Clock()
 
-"""graphics calculations
-we will be following this formula for 3d projection onto a 2d screen
-for a point x, y, z
-x' = x/z
-y' = y/z
-This assume a coordinates system which goes from -1,...,1 on the x and y axis
-pygame has 0,0 as the top left of the screen, w, 0 as the top right, 0, h as the bottom left,
-and finally w, h as the bottom right
-we need to map our virtual space from -1,...,1 to 0,...,w/h to render to the pygame display
-"""
-def convert_coordinates(coor : vc.vec3):
-    #adding 1 brings it to (0,...,2), dividing by 2 brings it to (0,...,1) multiplying it by width/height gives us (0,...,width/height)
-    return ((coor.x + 1) / 2 * WIDTH, (1 - (coor.y + 1) / 2) * HEIGHT)
-def project(vertex: vc.vec3):
-    return vc.vec3(vertex.x/vertex.z, vertex.y/vertex.z, vertex.z)
 #function which rotates around the y axis (modifying the existing x, z coordinates)
 #derivation for the rotation matrix: https://en.wikipedia.org/wiki/Rotation_matrix
 def rotate_xz(vertex : vc.vec3, angle):
@@ -40,9 +26,11 @@ def rotate_xz(vertex : vc.vec3, angle):
     return vc.vec3(x_rotated, vertex.y, z_rotated)
 
 def transform(vertex : vc.vec3, dz):
-    vertex.z += (2.0 + dz)
+    vertex.z += dz
     return vertex
 
+cam = Camera(WIDTH, HEIGHT)
+cam.position.z = 2.0
 
 dz = 0
 angle = 0
@@ -66,9 +54,20 @@ while running:
     
     for edge in edges:
         #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
-        a = convert_coordinates(project(transform(rotate_xz(vs[edge[0]], angle), dz)))
-        b = convert_coordinates(project(transform(rotate_xz(vs[edge[1]], angle), dz)))
-        pg.draw.line(screen, COLOR, a, b)
+        a = transform(rotate_xz(vs[edge[0]], angle), dz)
+        b = transform(rotate_xz(vs[edge[1]], angle), dz)
+        #convert a and b from world space to camera space, this needs to happen before clipping, since the near plane is in cam space
+        ca = cam.world_to_camera(a)
+        cb = cam.world_to_camera(b)
+        #clip any lines that would render behind the near plane of the cam
+        clipped = cam.clip_line_near(ca, cb)
+        if clipped is None:
+            continue
+        point_a = cam.render(clipped[0])
+        point_b = cam.render(clipped[1])
+        if (point_a is None or point_b is None):
+            continue
+        pg.draw.line(screen, COLOR, point_a, point_b)
     #print("displaying to screen")
     pg.display.flip()
     clock.tick(FPS)
