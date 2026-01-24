@@ -30,7 +30,7 @@ def transform(vertex : vc.vec3, dz):
     return vertex
 
 cam = Camera(WIDTH, HEIGHT)
-cam.position.z = 2.0
+cam.position.z = 0
 
 dz = 0
 angle = 0
@@ -51,6 +51,10 @@ while running:
     COLOR = (0, 255, 0)
     vs = cube.vertices
     edges = cube.edges
+
+    sphere = ob.sphere(vc.vec3(0, 0, 0), 1, segments = 12, rings = 12)
+    vs = sphere.vertices
+    edges = sphere.edges
     
     for edge in edges:
         #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
