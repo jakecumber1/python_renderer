@@ -2,12 +2,12 @@
 import vecs as vc
 import math
 class Camera:
-    def __init__(self, width, height):
+    def __init__(self, width, height, position : vc.vec3):
         self.width = width
         self.height = height
 
         #camera's starting position is 0,0,0
-        self.position = vc.vec3(0, 0, 0)
+        self.position = position
         #near plane to stop rendering to prevent weird rendering behavior
         self.near = 0.1
     """graphics calculations
@@ -60,8 +60,13 @@ class Camera:
             return a, i
 
     def render(self, vec : vc.vec3):
-        v = self.world_to_camera(vec)
-        v = self.project(v)
+        v = self.project(vec)
         if v is None:
             return None
         return self.convert_coordinates(v)
+    
+    #Convenience function for moving camera
+    def move(self, dx, dy, dz):
+        self.position.x += dx
+        self.position.y += dy
+        self.position.z += dz

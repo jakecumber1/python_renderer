@@ -12,6 +12,8 @@ from camera import Camera
 WIDTH = 800
 HEIGHT = 600
 FPS = 60
+CAM_POSITION = vc.vec3(0, 0, 0)
+CAM_SPEED = 2.0
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 clock = pg.time.Clock()
@@ -28,9 +30,9 @@ def rotate_xz(vertex : vc.vec3, angle):
 def transform(vertex : vc.vec3, dz):
     vertex.z += dz
     return vertex
+ 
 
-cam = Camera(WIDTH, HEIGHT)
-cam.position.z = 0
+cam = Camera(WIDTH, HEIGHT, CAM_POSITION)
 
 dz = 0
 angle = 0
@@ -41,7 +43,8 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    
+
+
     #print("filling color")
     #fill the screen with a background color, we'll choose red
     screen.fill((255, 0, 0))
@@ -76,6 +79,18 @@ while running:
     pg.display.flip()
     clock.tick(FPS)
     delta_time = 1/FPS
-    dz += 1 * delta_time
+    #dz += 1 * delta_time
     #2 revolutions per second EDIT: divided by 3 to slow down rotation
     angle += 2 * math.pi * (delta_time / 3)
+    #Check input and handle camera movement
+    keys = pg.key.get_pressed()
+    dx = dy = dz = 0
+    
+    if keys[pg.K_w]: dz += CAM_SPEED * delta_time
+    if keys[pg.K_s]: dz -= CAM_SPEED * delta_time
+    if keys[pg.K_a]: dx -= CAM_SPEED * delta_time
+    if keys[pg.K_d]: dx += CAM_SPEED * delta_time
+    if keys[pg.K_q]: dy += CAM_SPEED * delta_time  # up
+    if keys[pg.K_e]: dy -= CAM_SPEED * delta_time  # down
+
+    cam.move(dx, dy, dz)
