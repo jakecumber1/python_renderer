@@ -4,21 +4,7 @@ and plane of projection calculations."""
 import pygame as pg
 import math
 import vecs as vc
-"""
-A cube class for quickly creating an rendering cubes given a starting coordinate and length, work in progress.
-class cube:
-    def __init__(self, start_vertex : vec3, side_length):
-        self.vertices = [start_vertex, vec3(start_vertex.x + side_length, start_vertex.y, start_vertex.z),
-                          vec3(start_vertex.x, start_vertex.y + side_length, start_vertex.z),
-                           vec3(start_vertex.x + side_length, start_vertex.y + side_length, start_vertex.z),
-                            vec3(start_vertex.x, start_vertex.y, start_vertex.z + side_length),
-                             vec3(start_vertex.x + side_length, start_vertex.y, start_vertex.z + side_length),
-                              vec3(start_vertex.x, start_vertex.y + side_length, start_vertex.z + side_length), 
-                               vec3(start_vertex.x + side_length, start_vertex.y + side_length, start_vertex.z + side_length)]
-
-cube1 = cube(vec3(0, 0, 1), 1)
-"""
-
+import objects as ob
 
 """Window creation"""
 #Basic constants for our scene
@@ -73,20 +59,10 @@ while running:
     screen.fill((255, 0, 0))
     #Now add a green cube
     #print("drawing cube")
+    cube = ob.cube(vc.vec3(-0.5, -0.5, -0.5), 1)
     COLOR = (0, 255, 0)
-    vs = [
-        vc.vec3(0.5, 0.5, 0.5),
-        vc.vec3(-0.5, 0.5, 0.5),
-        vc.vec3(-0.5, -0.5, 0.5),
-        vc.vec3(0.5, -0.5, 0.5),
-        vc.vec3(0.5, 0.5, -0.5),
-        vc.vec3(-0.5, 0.5, -0.5),
-        vc.vec3(-0.5, -0.5, -0.5),
-        vc.vec3(0.5, -0.5, -0.5)
-    ]
-    edges = [(0, 1), (1, 2), (2, 3), (3, 0),
-    (4, 5), (5, 6), (6, 7), (7, 4),
-    (0, 4), (1, 5), (2, 6), (3, 7)]
+    vs = cube.vertices
+    edges = cube.edges
     
     for edge in edges:
         #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
