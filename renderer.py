@@ -50,14 +50,18 @@ while running:
     screen.fill((255, 0, 0))
     #Now add a green cube
     #print("drawing cube")
-    cube = ob.cube(vc.vec3(-0.5, -0.5, -0.5), 1)
+    #cube = ob.cube(vc.vec3(-0.5, -0.5, -0.5), 1)
+    #cube.scale(2, axis="x")
     COLOR = (0, 255, 0)
-    vs = cube.vertices
-    edges = cube.edges
+    #vs = cube.vertices
+    #edges = cube.edges
 
-    sphere = ob.sphere(vc.vec3(0, 0, 0), 1, segments = 12, rings = 12)
-    vs = sphere.vertices
-    edges = sphere.edges
+    #sphere = ob.sphere(vc.vec3(0, 0, 0), 1, segments = 12, rings = 12)
+    #vs = sphere.vertices
+    #edges = sphere.edges
+    """
+
+    EXAMPLE RENDER LOOP
     
     for edge in edges:
         #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
@@ -75,6 +79,26 @@ while running:
         if (point_a is None or point_b is None):
             continue
         pg.draw.line(screen, COLOR, point_a, point_b)
+    """
+    player_ship = ob.player_ship()
+    for shape in player_ship.shapes:
+        vs = shape.vertices
+        for edge in shape.edges:
+            #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
+            a = transform(rotate_xz(vs[edge[0]], angle), dz)
+            b = transform(rotate_xz(vs[edge[1]], angle), dz)
+            #convert a and b from world space to camera space, this needs to happen before clipping, since the near plane is in cam space
+            ca = cam.world_to_camera(a)
+            cb = cam.world_to_camera(b)
+            #clip any lines that would render behind the near plane of the cam
+            clipped = cam.clip_line_near(ca, cb)
+            if clipped is None:
+                continue
+            point_a = cam.render(clipped[0])
+            point_b = cam.render(clipped[1])
+            if (point_a is None or point_b is None):
+                continue
+            pg.draw.line(screen, COLOR, point_a, point_b)
     #print("displaying to screen")
     pg.display.flip()
     clock.tick(FPS)
@@ -83,14 +107,17 @@ while running:
     #2 revolutions per second EDIT: divided by 3 to slow down rotation
     angle += 2 * math.pi * (delta_time / 3)
     #Check input and handle camera movement
+    #Get pressed returns a key, bool dict we can index w/ pg.key_name
+    #if true a key that key is being pressed
+    #determine where to move the cam based on what keys are currently pressed down
     keys = pg.key.get_pressed()
     dx = dy = dz = 0
     
-    if keys[pg.K_w]: dz += CAM_SPEED * delta_time
+    if keys[pg.K_w]: dz += CAM_SPEED * delta_time # Remember to flip signs on Z since we are moving the world AROUND the camera
     if keys[pg.K_s]: dz -= CAM_SPEED * delta_time
     if keys[pg.K_a]: dx -= CAM_SPEED * delta_time
     if keys[pg.K_d]: dx += CAM_SPEED * delta_time
     if keys[pg.K_q]: dy += CAM_SPEED * delta_time  # up
     if keys[pg.K_e]: dy -= CAM_SPEED * delta_time  # down
-
+    if keys[pg.K_ESCAPE]: running = False # End program if user presses escape, update later to bring up a quit menu
     cam.move(dx, dy, dz)
