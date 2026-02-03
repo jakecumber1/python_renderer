@@ -31,8 +31,14 @@ def transform(vertex : vc.vec3, dz):
     vertex.z += dz
     return vertex
  
-
+#Camera definition
 cam = Camera(WIDTH, HEIGHT, CAM_POSITION)
+
+#Load audio files
+asteroid_explosion = pg.mixer.Sound("sounds/asteroid_explosion.wav")
+canon_sound = pg.mixer.Sound("sounds/canon_sound.wav")
+hit_sound = pg.mixer.Sound("sounds/hit_sound.wav")
+
 
 dz = 0
 angle = 0
@@ -62,7 +68,7 @@ while running:
     """
 
     EXAMPLE RENDER LOOP
-    
+
     for edge in edges:
         #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
         a = transform(rotate_xz(vs[edge[0]], angle), dz)
@@ -80,7 +86,7 @@ while running:
             continue
         pg.draw.line(screen, COLOR, point_a, point_b)
     """
-    player_ship = ob.player_ship()
+    player_ship = ob.Playership()
     for shape in player_ship.shapes:
         vs = shape.vertices
         for edge in shape.edges:
@@ -120,4 +126,5 @@ while running:
     if keys[pg.K_q]: dy += CAM_SPEED * delta_time  # up
     if keys[pg.K_e]: dy -= CAM_SPEED * delta_time  # down
     if keys[pg.K_ESCAPE]: running = False # End program if user presses escape, update later to bring up a quit menu
+    if keys[pg.K_SPACE]: canon_sound.play()
     cam.move(dx, dy, dz)
