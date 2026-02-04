@@ -117,6 +117,44 @@ class Playership:
             shape.print()
             i = i + 1
 
+#Laser class for player projectiles
+class Laser:
+    def __init__(self, start : vc.vec2, target : vc.vec2, speed=2000, color = (0, 255, 255), thickness = 2, length = 60):
+        self.start = start
+        self.target = target
+        self.color = color
+        self.thickness = thickness
+        self.speed = speed
+        
+        #compute direction from start to target
+        self.direction = (target - start).unit_vector()
+        self.head = start
+        self.tail = start - self.direction * length
+
+        #total length from start to target
+        self.total_length = (target - start).length()
+        self.traveled = 0 #distance traveled, for deleting the line later
+
+        self.finished = False
+    def update(self, delta_time):
+        #animate the laser moving towards the target
+        if self.finished:
+            return
+
+        movement = self.direction * self.speed * delta_time
+
+        # Move both head and tail forward
+        self.head = self.head + movement
+        self.tail = self.tail + movement
+
+        # Kill laser when head reaches target
+        if (self.head - self.target).length() <= self.speed * delta_time:
+            self.finished = True
+    def is_finished(self):
+        #return true if the target point is reached
+        return self.finished
+
+
 if __name__ == "__main__":
     cube1 = Cube(vc.vec3(0, 0, 1), 1)
     cube1.print()

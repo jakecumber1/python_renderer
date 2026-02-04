@@ -17,6 +17,13 @@ CAM_SPEED = 2.0
 pg.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 clock = pg.time.Clock()
+pg.mouse.set_visible(False)
+
+#Load audio files
+asteroid_explosion = pg.mixer.Sound("sounds/asteroid_explosion.wav")
+canon_sound = pg.mixer.Sound("sounds/canon_sound.wav")
+hit_sound = pg.mixer.Sound("sounds/hit_sound.wav")
+
 
 #function which rotates around the y axis (modifying the existing x, z coordinates)
 #derivation for the rotation matrix: https://en.wikipedia.org/wiki/Rotation_matrix
@@ -34,12 +41,67 @@ def transform(vertex : vc.vec3, dz):
 #Camera definition
 cam = Camera(WIDTH, HEIGHT, CAM_POSITION)
 
-#Load audio files
-asteroid_explosion = pg.mixer.Sound("sounds/asteroid_explosion.wav")
-canon_sound = pg.mixer.Sound("sounds/canon_sound.wav")
-hit_sound = pg.mixer.Sound("sounds/hit_sound.wav")
+#Crosshair class definition
+class Crosshair:
+    def __init__(self, width, height, rgb, dot_rad, gap, line_len, thick):
+        self.width = width
+        self.height = height
+        self.crosshair_x = width // 2
+        self.crosshair_y = height // 2
+        self.color = rgb
+        self.dot_radius = dot_rad
+        self.gap = gap
+        self.line_length = line_len
+        self.thickness = thick
 
+crosshair = Crosshair(WIDTH, HEIGHT, (0, 0, 255), 1, 4, 8, 1)
 
+#function for handling moving the cross hair across the screen
+def on_mouse_move(crosshair, mouse_x, mouse_y):
+    crosshair.crosshair_x = mouse_x
+    crosshair.crosshair_y = mouse_y
+
+LASER_COOLDOWN = 0.5
+time_since_last_shot = 0.0
+def on_mouse_left_click(crosshair, lasers):
+
+    global time_since_last_shot
+
+    if time_since_last_shot > LASER_COOLDOWN:
+        time_since_last_shot = 0.0
+        mouse_pos = vc.vec2(crosshair.crosshair_x, crosshair.crosshair_y)
+        left_edge = vc.vec2(0, HEIGHT // 2)
+        right_edge = vc.vec2(WIDTH, HEIGHT // 2)
+        lasers.append(ob.Laser(left_edge, mouse_pos, speed = 2000))
+        lasers.append(ob.Laser(right_edge, mouse_pos, speed = 2000))
+        canon_sound.play()
+        
+
+def draw_crosshair(crosshair, screen):
+    cx = int(crosshair.crosshair_x)
+    cy = int(crosshair.crosshair_y)
+    gap = crosshair.gap
+    length = crosshair.line_length
+    thick = crosshair.thickness
+    
+    #draw lines around the dot first
+    #Left line
+    pg.draw.line(screen, crosshair.color, (cx - gap - length, cy), (cx - gap, cy), thick)
+    #right
+    pg.draw.line(screen, crosshair.color, (cx + gap, cy), (cx + gap + length, cy), thick)
+    #above
+    pg.draw.line(screen, crosshair.color, (cx, cy - gap - length), (cx, cy - gap), thick)
+    #below
+    pg.draw.line(screen, crosshair.color, (cx, cy + gap), (cx, cy + gap + length), thick)
+
+    #draw center dot
+    if (crosshair.dot_radius != 0):
+        pg.draw.circle(screen, crosshair.color, (cx, cy), crosshair.dot_radius)
+    
+def laser_draw(laser, screen):
+    pg.draw.line(screen, laser.color, (laser.tail.x, laser.tail.y), (laser.head.x, laser.head.y), laser.thickness)
+
+lasers = []
 dz = 0
 angle = 0
 #main render loop
@@ -49,6 +111,10 @@ while running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
+        elif event.type == pg.MOUSEMOTION:
+            mouse_x = max(0, min(event.pos[0], WIDTH))
+            mouse_y = max(0, min(event.pos[1], HEIGHT))
+            on_mouse_move(crosshair, mouse_x, mouse_y)
 
 
     #print("filling color")
@@ -105,7 +171,17 @@ while running:
             if (point_a is None or point_b is None):
                 continue
             pg.draw.line(screen, COLOR, point_a, point_b)
+    draw_crosshair(crosshair, screen)
+
+    #Laser drawing
+    for laser in lasers:
+        laser.update(delta_time)
+        laser_draw(laser, screen)
+        if laser.is_finished():
+            lasers.remove(laser)
     #print("displaying to screen")
+
+
     pg.display.flip()
     clock.tick(FPS)
     delta_time = 1/FPS
@@ -116,9 +192,12 @@ while running:
     #Get pressed returns a key, bool dict we can index w/ pg.key_name
     #if true a key that key is being pressed
     #determine where to move the cam based on what keys are currently pressed down
+    time_since_last_shot += delta_time
     keys = pg.key.get_pressed()
     dx = dy = dz = 0
-    
+
+
+
     if keys[pg.K_w]: dz += CAM_SPEED * delta_time # Remember to flip signs on Z since we are moving the world AROUND the camera
     if keys[pg.K_s]: dz -= CAM_SPEED * delta_time
     if keys[pg.K_a]: dx -= CAM_SPEED * delta_time
@@ -126,5 +205,10 @@ while running:
     if keys[pg.K_q]: dy += CAM_SPEED * delta_time  # up
     if keys[pg.K_e]: dy -= CAM_SPEED * delta_time  # down
     if keys[pg.K_ESCAPE]: running = False # End program if user presses escape, update later to bring up a quit menu
-    if keys[pg.K_SPACE]: canon_sound.play()
+    
+    #handle clicking
+    mouse_pressed = pg.mouse.get_pressed()
+    if mouse_pressed[0]:
+        on_mouse_left_click(crosshair, lasers)
+
     cam.move(dx, dy, dz)

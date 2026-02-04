@@ -86,7 +86,62 @@ class vec3:
             return vec3(0,0,0)
         return self / length
 
+class vec2:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+    def __mul__(self, other):
+    
+        if isinstance(other, vec2):
+            return vec2(self.x * other.x,
+            self.y * other.y)
+        elif isinstance(other, (int, float)):
+            return vec2(self.x * other,
+            self.y * other)
+        else:
+            return NotImplemented
+    def __rmul__(self, other):
+        return self * other
+    def __add__(self, other):
+        if isinstance(other, vec2):
+            return vec2(self.x + other.x,
+            self.y + other.y)
+        elif isinstance(other, (int, float)):
+            return vec2(self.x + other,
+            self.y + other)
+        else:
+            return NotImplemented
+    def __sub__(self, other):
+        if isinstance(other, vec2):
+            return vec2(self.x - other.x,
+            self.y - other.y)
+        elif isinstance(other, (int, float)):
+            return vec2(self.x - other,
+            self.y - other)
+        else:
+            return NotImplemented
+    def __truediv__(self, num):
+        if not isinstance(num, (int, float)):
+            return NotImplemented
+        if num == 0:
+            raise ZeroDivisionError
+        return vec2(
+            self.x/num,
+            self.y/num
+        )
 
+    def length(self):
+        return (self.x * self.x + self.y * self.y) ** (1/2)
+    def unit_vector(self):
+        length = self.length()
+        if length == 0:
+            return vec2(0, 0)
+        return self / length
+    
+
+    
 #vec3 testing suite
 if __name__ == "__main__":
     vec1 = vec3(1, 1, 1)
