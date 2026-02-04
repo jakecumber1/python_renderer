@@ -7,6 +7,24 @@ class vec3:
         self.x = x
         self.y = y
         self.z = z
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.x
+        if index == 1:
+            return self.y
+        if index == 2:
+            return self.z
+        raise IndexError(f"index: {index} out of range for vec3")
+    def __setitem__(self, index, value):
+        if index == 0:
+            self.x = value
+        elif index == 1:
+            self.y = value
+        elif index == 2:
+            self.z = value
+        else:
+            raise IndexError(f"index: {index} out of range for vec3")
     def __str__(self):
         return f"({self.x}, {self.y}, {self.z})"
     #overload the * operator
@@ -85,11 +103,26 @@ class vec3:
             #return a zero vector
             return vec3(0,0,0)
         return self / length
+    def to_tuple(self):
+        return (self.x, self.y, self.z)
 
 class vec2:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+    def __getitem__(self, index):
+        if index == 0:
+            return self.x
+        if index == 1:
+            return self.y
+        raise IndexError(f"index: {index} out of range for vec3")
+    def __setitem__(self, index, value):
+        if index == 0:
+            self.x = value
+        elif index == 1:
+            self.y = value
+        else:
+            raise IndexError(f"index: {index} out of range for vec3")
     def __str__(self):
         return f"({self.x}, {self.y})"
     def __mul__(self, other):
@@ -131,7 +164,9 @@ class vec2:
             self.x/num,
             self.y/num
         )
-
+    
+    def cross(self, vec):
+        return self.x * vec.y - self.y * vec.x
     def length(self):
         return (self.x * self.x + self.y * self.y) ** (1/2)
     def unit_vector(self):
@@ -139,8 +174,20 @@ class vec2:
         if length == 0:
             return vec2(0, 0)
         return self / length
+    def to_tuple(self):
+        return (self.x, self.y)
     
-
+#A method to detect if lines intersect (for collision)
+def lines_intersect(p, p2, q, q2):
+    r = p2 - p
+    s = q2 - q
+    denom = r.cross(s)
+    if denom == 0:
+        return False #parallel or collinear to eachother
+    q_sub_p = q - p
+    t = q_sub_p.cross(s) / denom
+    u = q_sub_p.cross(r) / denom
+    return 0 <= t <= 1 and 0 <= u <= 1
     
 #vec3 testing suite
 if __name__ == "__main__":

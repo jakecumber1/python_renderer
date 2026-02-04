@@ -101,9 +101,35 @@ def draw_crosshair(crosshair, screen):
 def laser_draw(laser, screen):
     pg.draw.line(screen, laser.color, (laser.tail.x, laser.tail.y), (laser.head.x, laser.head.y), laser.thickness)
 
+def handle_hit(laser, obj):
+    hit_sound.play()
+
+#Function for handling object drawing
+def draw_object(obj, cam):
+        vs = obj.vertices
+        for edge in obj.edges:
+            #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
+            a = transform(rotate_xz(vs[edge[0]], angle), dz)
+            b = transform(rotate_xz(vs[edge[1]], angle), dz)
+            #convert a and b from world space to camera space, this needs to happen before clipping, since the near plane is in cam space
+            ca = cam.world_to_camera(a)
+            cb = cam.world_to_camera(b)
+            #clip any lines that would render behind the near plane of the cam
+            clipped = cam.clip_line_near(ca, cb)
+            if clipped is None:
+                continue
+
+            point_a = cam.render(clipped[0])
+            point_b = cam.render(clipped[1])
+            if (point_a is None or point_b is None):
+                continue
+            pg.draw.line(screen, COLOR, point_a.to_tuple(), point_b.to_tuple())
+
+
 lasers = []
 dz = 0
 angle = 0
+objects = [ob.Cube(vc.vec3(0, 0, 0), 4), ob.Sphere(vc.vec3(0, 4, 5), 2), ob.Cube(vc.vec3(0, -3, 2), 3)]
 #main render loop
 running = True
 print("starting render loop")
@@ -152,31 +178,21 @@ while running:
             continue
         pg.draw.line(screen, COLOR, point_a, point_b)
     """
-    player_ship = ob.Playership()
-    for shape in player_ship.shapes:
-        vs = shape.vertices
-        for edge in shape.edges:
-            #perform rotation, translation, then cast to plane of projection, then finally convert the coordinates to screen coordinates
-            a = transform(rotate_xz(vs[edge[0]], angle), dz)
-            b = transform(rotate_xz(vs[edge[1]], angle), dz)
-            #convert a and b from world space to camera space, this needs to happen before clipping, since the near plane is in cam space
-            ca = cam.world_to_camera(a)
-            cb = cam.world_to_camera(b)
-            #clip any lines that would render behind the near plane of the cam
-            clipped = cam.clip_line_near(ca, cb)
-            if clipped is None:
-                continue
-            point_a = cam.render(clipped[0])
-            point_b = cam.render(clipped[1])
-            if (point_a is None or point_b is None):
-                continue
-            pg.draw.line(screen, COLOR, point_a, point_b)
+    for obj in objects:
+        draw_object(obj, cam)
     draw_crosshair(crosshair, screen)
 
     #Laser drawing
-    for laser in lasers:
+    #since we might remove [:] gives us a copy of the list
+    for laser in lasers[:]:
         laser.update(delta_time)
-        laser_draw(laser, screen)
+        for obj in objects:
+            if ob.laser_hits_object(laser, cam.project_object(obj), obj.edges):
+                handle_hit(laser, obj)
+                objects.remove(obj)
+                lasers.remove(laser)
+        if laser in lasers:
+            laser_draw(laser, screen)
         if laser.is_finished():
             lasers.remove(laser)
     #print("displaying to screen")

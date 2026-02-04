@@ -30,7 +30,7 @@ class Camera:
         return vc.vec3(vertex.x/vertex.z, vertex.y/vertex.z, vertex.z)
     def convert_coordinates(self, coor : vc.vec3):
         #adding 1 brings it to (0,...,2), dividing by 2 brings it to (0,...,1) multiplying it by width/height gives us (0,...,width/height)
-        return ((coor.x + 1) / 2 * self.width, (1 - (coor.y + 1) / 2) * self.height)
+        return vc.vec2((coor.x + 1) / 2 * self.width, (1 - (coor.y + 1) / 2) * self.height)
     
     #Clip any lines behind the near plane to the plane instead of trying to render behind the camera
     def clip_line_near(self, a, b):
@@ -64,9 +64,21 @@ class Camera:
         if v is None:
             return None
         return self.convert_coordinates(v)
-    
+
     #Convenience function for moving camera
     def move(self, dx, dy, dz):
         self.position.x += dx
         self.position.y += dy
         self.position.z += dz
+    #For the convenience of collision
+    def project_object(self, obj):
+        #list of 2d projected vertices
+        projected = []
+        for v in obj.vertices:
+            cam_v = self.world_to_camera(v)
+            p = self.project(cam_v)
+            if p is None:
+                continue
+            else:
+                projected.append(self.convert_coordinates(p))
+        return projected

@@ -31,6 +31,20 @@ class Object():
             print(f"(point {i}: {vec.x}, {vec.y}, {vec.z})")
             i = i + 1
         print(self.edges)
+    #bounding definition for collision
+    def get_bounds(self):
+        xs = []
+        ys = []
+        zs = []
+        for v in self.vertices:
+            xs.append(v.x)
+            ys.append(v.y)
+            zs.append(v.z)
+        return (
+            min(xs), max(xs),
+            min(ys), max(ys),
+            min(zs), max(zs)
+        )
 
 
 
@@ -153,6 +167,19 @@ class Laser:
     def is_finished(self):
         #return true if the target point is reached
         return self.finished
+
+"""Collision section """
+#We're checking collision after the object has been converted to 2d screen coordinates
+def laser_hits_object(laser, vertices_2d, obj_edges):
+    p1 = laser.tail
+    p2 = laser.head
+    for i, j in obj_edges:
+        q1 = vertices_2d[i]
+        q2 = vertices_2d[j]
+        if vc.lines_intersect(p1, p2, q1, q2):
+            return True
+    return False
+    
 
 
 if __name__ == "__main__":
