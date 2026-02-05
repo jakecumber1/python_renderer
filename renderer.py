@@ -130,6 +130,7 @@ lasers = []
 dz = 0
 angle = 0
 objects = [ob.Cube(vc.vec3(0, 0, 0), 4), ob.Sphere(vc.vec3(0, 4, 5), 2), ob.Cube(vc.vec3(0, -3, 2), 3)]
+score = 0
 #main render loop
 running = True
 print("starting render loop")
@@ -186,14 +187,16 @@ while running:
     #since we might remove [:] gives us a copy of the list
     for laser in lasers[:]:
         laser.update(delta_time)
-        for obj in objects:
+        for obj in objects[:]:
             if ob.laser_hits_object(laser, cam.project_object(obj), obj.edges):
                 handle_hit(laser, obj)
+                score = score + 1
                 objects.remove(obj)
                 lasers.remove(laser)
+                break
         if laser in lasers:
             laser_draw(laser, screen)
-        if laser.is_finished():
+        if laser.is_finished() and laser in lasers:
             lasers.remove(laser)
     #print("displaying to screen")
 
@@ -218,8 +221,8 @@ while running:
     if keys[pg.K_s]: dz -= CAM_SPEED * delta_time
     if keys[pg.K_a]: dx -= CAM_SPEED * delta_time
     if keys[pg.K_d]: dx += CAM_SPEED * delta_time
-    if keys[pg.K_q]: dy += CAM_SPEED * delta_time  # up
-    if keys[pg.K_e]: dy -= CAM_SPEED * delta_time  # down
+    if keys[pg.K_SPACE]: dy += CAM_SPEED * delta_time  # up
+    if keys[pg.K_LCTRL]: dy -= CAM_SPEED * delta_time  # down
     if keys[pg.K_ESCAPE]: running = False # End program if user presses escape, update later to bring up a quit menu
     
     #handle clicking
@@ -228,3 +231,4 @@ while running:
         on_mouse_left_click(crosshair, lasers)
 
     cam.move(dx, dy, dz)
+print(f"Game over! Your final score is: {score}")
